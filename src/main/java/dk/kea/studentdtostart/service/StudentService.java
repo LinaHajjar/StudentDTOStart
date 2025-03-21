@@ -1,5 +1,7 @@
 package dk.kea.studentdtostart.service;
 
+import dk.kea.studentdtostart.dto.StudentRequestDTO;
+import dk.kea.studentdtostart.dto.StudentResponseDTO;
 import dk.kea.studentdtostart.model.Student;
 import dk.kea.studentdtostart.repository.StudentRepository;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,8 @@ public class StudentService {
         this.studentRepository = studentRepository;
     }
 
-    public List<Student> getAllStudents() {
+    //vi laver den her om så i stedet for at få en student response så får vi en studentResponse DTO
+    /*public List<Student> getAllStudents() {
         List<Student> students = studentRepository.findAll();
         List<Student> studentResponses = new ArrayList<>();
 
@@ -28,9 +31,31 @@ public class StudentService {
         }
 
         return studentResponses;
+    }*/
+
+
+
+    public List<StudentResponseDTO> getAllStudents() {
+        List<Student> students = studentRepository.findAll();
+        List<StudentResponseDTO> studentResponseDTOs = new ArrayList<>();
+
+        // Using a for-loop to convert each Student to a StudentResponseDTO
+        for (Student student : students) {
+            StudentResponseDTO studentResponseDTO = new StudentResponseDTO(
+                    student.getId(),
+                    student.getName(),
+                    student.getBornDate(),
+                    student.getBornTime()
+            );
+            studentResponseDTOs.add(studentResponseDTO);
+        }
+
+        return studentResponseDTOs;
     }
 
-    public Student getStudentById(Long id) {
+
+
+    public StudentResponseDTO getStudentById(Long id) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
 
         // Throw RuntimeException if student is not found
@@ -40,17 +65,46 @@ public class StudentService {
 
         Student studentResponse = optionalStudent.get();
 
-        return studentResponse;
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(
+                studentResponse.getId(),
+                studentResponse.getName(),
+                studentResponse.getBornDate(),
+                studentResponse.getBornTime()
+        );
+
+        return studentResponseDTO;
 
     }
 
-    public Student createStudent(Student studentRequest) {
-        Student studentResponse = studentRepository.save(studentRequest);
 
-        return studentResponse;
+
+
+    public StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO) {
+        //Student studentResponse = studentRepository.save(studentRequest);
+
+        Student newStudent = new Student(
+                studentRequestDTO.name(),
+                studentRequestDTO.password(),
+                studentRequestDTO.bornDate(),
+                studentRequestDTO.bornTime()
+        );
+
+        Student savedStudent = studentRepository.save(newStudent);
+
+
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(
+                savedStudent.getId(),
+                savedStudent.getName(),
+                savedStudent.getBornDate(),
+                savedStudent.getBornTime()
+        );
+
+        return studentResponseDTO;
     }
 
-    public Student updateStudent(Long id, Student studentRequest) {
+
+
+    public StudentResponseDTO updateStudent(Long id, StudentRequestDTO studentRequestDTO) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         // Throw RuntimeException if student is not found
         if (optionalStudent.isEmpty()) {
@@ -59,13 +113,22 @@ public class StudentService {
 
         Student student = optionalStudent.get();
 
-        student.setName(studentRequest.getName());
-        student.setPassword(studentRequest.getPassword());
-        student.setBornDate(studentRequest.getBornDate());
-        student.setBornTime(studentRequest.getBornTime());
+        student.setName(studentRequestDTO.name());
+        student.setPassword(studentRequestDTO.password());
+        student.setBornDate(studentRequestDTO.bornDate());
+        student.setBornTime(studentRequestDTO.bornTime());
 
         Student studentResponse = studentRepository.save(student);
-        return studentResponse;
+
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(
+                studentResponse.getId(),
+                studentResponse.getName(),
+                studentResponse.getBornDate(),
+                studentResponse.getBornTime()
+        );
+
+
+        return studentResponseDTO;
     }
 
     public void deleteStudent(Long id) {
